@@ -28,13 +28,15 @@ const jump = 32 // Jump size in InsersectWithJump.
 
 // ApplyFilter applies a filter to our UIDList.
 func ApplyFilter(u *pb.List, f func(uint64, int) bool) {
-	out := u.Uids[:0]
-	for i, uid := range u.Uids {
+	out := codec.Encoder{}
+
+	dec := codec.Decoder{Pack: u.Uids}
+	for i, uid := range dec.Uids() {
 		if f(uid, i) {
-			out = append(out, uid)
+			out.Add(uid)
 		}
 	}
-	u.Uids = out
+	u.Uids = out.Done()
 }
 
 // IntersectCompressedWith intersects a packed list of UIDs with another list
@@ -43,15 +45,17 @@ func IntersectCompressedWith(pack *pb.UidPack, afterUID uint64, v, o *pb.List) {
 	if pack == nil {
 		return
 	}
-	dec := codec.Decoder{Pack: pack}
-	dec.Seek(afterUID, codec.SeekStart)
-	n := dec.ApproxLen()
-	m := len(v.Uids)
+	packDec := codec.Decoder{Pack: pack}
+	packDec.Seek(afterUID, codec.SeekStart)
+	n := packDec.ApproxLen()
+
+	vDec := codec.Decoder{Pack: v.Uids}
+	m := vDec.ApproxLen()
 
 	if n > m {
 		n, m = m, n
 	}
-	dst := o.Uids[:0]
+	dst := codec.Encoder{}
 
 	// If n equals 0, set it to 1 to avoid division by zero.
 	if n == 0 {
@@ -61,22 +65,22 @@ func IntersectCompressedWith(pack *pb.UidPack, afterUID uint64, v, o *pb.List) {
 	// Select appropriate function based on heuristics.
 	ratio := float64(m) / float64(n)
 	if ratio < 500 {
-		IntersectCompressedWithLinJump(&dec, v.Uids, &dst)
+		IntersectCompressedWithLinJump(&packDec, &vDec, &dst)
 	} else {
-		IntersectCompressedWithBin(&dec, v.Uids, &dst)
+		IntersectCompressedWithBin(&packDec, &vDec, &dst)
 	}
 	o.Uids = dst
 }
 
 // IntersectCompressedWithLinJump performs the intersection linearly.
-func IntersectCompressedWithLinJump(dec *codec.Decoder, v []uint64, o *[]uint64) {
+func IntersectCompressedWithLinJump(u, v *codec.Decoder, o *codec.Encoder) {
 	m := len(v)
 	k := 0
-	_, off := IntersectWithLin(dec.Uids(), v[k:], o)
+	_, off := IntersectWithLin(u.Uids(), v[k:], o)
 	k += off
 
 	for k < m {
-		u := dec.LinearSeek(v[k])
+		u := u.LinearSeek(v[k])
 		if len(u) == 0 {
 			break
 		}
