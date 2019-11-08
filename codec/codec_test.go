@@ -302,9 +302,8 @@ func TestPackIterator(t *testing.T) {
 
 	it := NewPackIterator(pack)
 	itValues := make([]uint64, 0)
-	for it.Valid() {
-		val, ok := it.Next()
-		require.True(t, ok)
+	for ; it.Valid(); it.Next() {
+		val := it.Get()
 		itValues = append(itValues, val)
 	}
 	require.Equal(t, values, itValues)

@@ -361,21 +361,21 @@ func (it *PackIterator) Valid() bool {
 	return true
 }
 
-// Next returns the next value in the UidPack.
-func (it *PackIterator) Next() (uint64, bool) {
-	if !it.Valid() {
-		return 0, false
-	}
-
+// Get  returns the current value in the UidPack. An out of bounds error will
+// occur if this function is called after we reach the end of the operation.
+// Make sure to call Valid before attempting to call this function.
+func (it *PackIterator) Get() uint64 {
 	if it.BlockCounter < len(it.Dec.Uids()) {
 		val := it.Dec.Uids()[it.BlockCounter]
-		it.BlockCounter++
-		return val, true
+		return val
 	}
 
 	_ = it.Dec.Next()
 	it.BlockCounter = 0
 	val := it.Dec.Uids()[it.BlockCounter]
+	return val
+}
+
+func (it *PackIterator) Next() {
 	it.BlockCounter++
-	return val, true
 }
