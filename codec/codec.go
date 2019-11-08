@@ -328,3 +328,54 @@ func Decode(pack *pb.UidPack, seek uint64) []uint64 {
 func match32MSB(num1, num2 uint64) bool {
 	return (num1 & bitMask) == (num2 & bitMask)
 }
+
+// PackIterator is a wrapper around Decoder to make it easier to iterate over a
+// whole UidPack.
+type PackIterator struct {
+	Pack         *pb.UidPack
+	Dec          *Decoder
+	BlockCounter int
+}
+
+// NewPackIterator constructs a valid PackIterator using the given UidPack.
+func NewPackIterator(pack *pb.UidPack) *PackIterator {
+	it := &PackIterator{
+		Pack: pack,
+		Dec:  &Decoder{Pack: pack},
+	}
+	// Load the first block.
+	_ = it.Dec.Seek(0, SeekStart)
+	return it
+}
+
+// Valid returns true if calling Next would return a valid value.
+// Returns false if the iterator has reached the end of the UidPack.
+func (it *PackIterator) Valid() bool {
+	if it.BlockCounter < len(it.Dec.Uids()) {
+		return true
+	}
+
+	if it.Dec.blockIdx == len(it.Pack.Blocks)-1 {
+		return false
+	}
+	return true
+}
+
+// Next returns the next value in the UidPack.
+func (it *PackIterator) Next() (uint64, bool) {
+	if !it.Valid() {
+		return 0, false
+	}
+
+	if it.BlockCounter < len(it.Dec.Uids()) {
+		val := it.Dec.Uids()[it.BlockCounter]
+		it.BlockCounter++
+		return val, true
+	}
+
+	_ = it.Dec.Next()
+	it.BlockCounter = 0
+	val := it.Dec.Uids()[it.BlockCounter]
+	it.BlockCounter++
+	return val, true
+}

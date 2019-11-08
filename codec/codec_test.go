@@ -290,3 +290,22 @@ func TestEncoding(t *testing.T) {
 		require.Equal(t, ints, decodedInts)
 	}
 }
+
+func TestPackIterator(t *testing.T) {
+	enc := Encoder{}
+	values := make([]uint64, 0)
+	for i := uint64(0); i < 1000; i++ {
+		values = append(values, i)
+		enc.Add(i)
+	}
+	pack := enc.Done()
+
+	it := NewPackIterator(pack)
+	itValues := make([]uint64, 0)
+	for it.Valid() {
+		val, ok := it.Next()
+		require.True(t, ok)
+		itValues = append(itValues, val)
+	}
+	require.Equal(t, values, itValues)
+}
