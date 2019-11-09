@@ -361,7 +361,7 @@ func (it *PackIterator) Valid() bool {
 	return true
 }
 
-// Get  returns the current value in the UidPack. An out of bounds error will
+// Get returns the current value in the UidPack. An out of bounds error will
 // occur if this function is called after we reach the end of the operation.
 // Make sure to call Valid before attempting to call this function.
 func (it *PackIterator) Get() uint64 {
