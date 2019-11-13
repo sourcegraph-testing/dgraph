@@ -35,21 +35,22 @@ import (
 // The range 0x80 - 0xff is for custom tokenizers.
 // TODO: use these everywhere where we must ensure a system tokenizer.
 const (
-	IdentNone     = 0x0
-	IdentTerm     = 0x1
-	IdentExact    = 0x2
-	IdentYear     = 0x4
-	IdentMonth    = 0x41
-	IdentDay      = 0x42
-	IdentHour     = 0x43
-	IdentGeo      = 0x5
-	IdentInt      = 0x6
-	IdentFloat    = 0x7
-	IdentFullText = 0x8
-	IdentBool     = 0x9
-	IdentTrigram  = 0xA
-	IdentHash     = 0xB
-	IdentCustom   = 0x80
+	IdentNone      = 0x0
+	IdentTerm      = 0x1
+	IdentExact     = 0x2
+	IdentExactLang = 0x3
+	IdentYear      = 0x4
+	IdentMonth     = 0x41
+	IdentDay       = 0x42
+	IdentHour      = 0x43
+	IdentGeo       = 0x5
+	IdentInt       = 0x6
+	IdentFloat     = 0x7
+	IdentFullText  = 0x8
+	IdentBool      = 0x9
+	IdentTrigram   = 0xA
+	IdentHash      = 0xB
+	IdentCustom    = 0x80
 )
 
 // Tokenizer defines what a tokenizer must provide.
@@ -77,6 +78,8 @@ type Tokenizer interface {
 	// during tokenization. If a predicate is tokenized using an IsLossy() tokenizer,
 	// then we need to fetch the actual value and compare.
 	IsLossy() bool
+
+	Prefix() string
 }
 
 var tokenizers = make(map[string]Tokenizer)
@@ -90,6 +93,7 @@ func init() {
 	registerTokenizer(MonthTokenizer{})
 	registerTokenizer(DayTokenizer{})
 	registerTokenizer(ExactTokenizer{})
+	registerTokenizer(LangTokenizer{})
 	registerTokenizer(BoolTokenizer{})
 	registerTokenizer(TrigramTokenizer{})
 	registerTokenizer(HashTokenizer{})
@@ -180,6 +184,7 @@ func (t GeoTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t GeoTokenizer) Identifier() byte { return IdentGeo }
 func (t GeoTokenizer) IsSortable() bool { return false }
 func (t GeoTokenizer) IsLossy() bool    { return true }
+func (t GeoTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // IntTokenizer generates tokens from integer data.
 type IntTokenizer struct{}
@@ -192,6 +197,7 @@ func (t IntTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t IntTokenizer) Identifier() byte { return IdentInt }
 func (t IntTokenizer) IsSortable() bool { return true }
 func (t IntTokenizer) IsLossy() bool    { return false }
+func (t IntTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // FloatTokenizer generates tokens from floating-point data.
 type FloatTokenizer struct{}
@@ -204,6 +210,7 @@ func (t FloatTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t FloatTokenizer) Identifier() byte { return IdentFloat }
 func (t FloatTokenizer) IsSortable() bool { return true }
 func (t FloatTokenizer) IsLossy() bool    { return true }
+func (t FloatTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // YearTokenizer generates year tokens from datetime data.
 type YearTokenizer struct{}
@@ -219,6 +226,7 @@ func (t YearTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t YearTokenizer) Identifier() byte { return IdentYear }
 func (t YearTokenizer) IsSortable() bool { return true }
 func (t YearTokenizer) IsLossy() bool    { return true }
+func (t YearTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // MonthTokenizer generates month tokens from datetime data.
 type MonthTokenizer struct{}
@@ -235,6 +243,7 @@ func (t MonthTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t MonthTokenizer) Identifier() byte { return IdentMonth }
 func (t MonthTokenizer) IsSortable() bool { return true }
 func (t MonthTokenizer) IsLossy() bool    { return true }
+func (t MonthTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // DayTokenizer generates day tokens from datetime data.
 type DayTokenizer struct{}
@@ -252,6 +261,7 @@ func (t DayTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t DayTokenizer) Identifier() byte { return IdentDay }
 func (t DayTokenizer) IsSortable() bool { return true }
 func (t DayTokenizer) IsLossy() bool    { return true }
+func (t DayTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // HourTokenizer generates hour tokens from datetime data.
 type HourTokenizer struct{}
@@ -270,6 +280,7 @@ func (t HourTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t HourTokenizer) Identifier() byte { return IdentHour }
 func (t HourTokenizer) IsSortable() bool { return true }
 func (t HourTokenizer) IsLossy() bool    { return true }
+func (t HourTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // TermTokenizer generates term tokens from string data.
 type TermTokenizer struct{}
@@ -287,6 +298,7 @@ func (t TermTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t TermTokenizer) Identifier() byte { return IdentTerm }
 func (t TermTokenizer) IsSortable() bool { return false }
 func (t TermTokenizer) IsLossy() bool    { return true }
+func (t TermTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // ExactTokenizer returns the exact string as a token.
 type ExactTokenizer struct{}
@@ -302,6 +314,25 @@ func (t ExactTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t ExactTokenizer) Identifier() byte { return IdentExact }
 func (t ExactTokenizer) IsSortable() bool { return true }
 func (t ExactTokenizer) IsLossy() bool    { return false }
+func (t ExactTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
+
+// LangTokenizer returns the exact string along with language prefix as a token.
+type LangTokenizer struct{ lang string }
+
+func (t LangTokenizer) Name() string { return "lang" }
+func (t LangTokenizer) Type() string { return "string" }
+func (t LangTokenizer) Tokens(v interface{}) ([]string, error) {
+	if term, ok := v.(string); ok {
+		lang := LangBase(t.lang)
+		term = lang + term
+		return []string{term}, nil
+	}
+	return nil, errors.Errorf("Lang indices only supported for string types")
+}
+func (t LangTokenizer) Identifier() byte { return IdentExactLang }
+func (t LangTokenizer) IsSortable() bool { return true }
+func (t LangTokenizer) IsLossy() bool    { return false }
+func (t LangTokenizer) Prefix() string   { return LangBase(t.lang) }
 
 // FullTextTokenizer generates full-text tokens from string data.
 type FullTextTokenizer struct{ lang string }
@@ -313,7 +344,7 @@ func (t FullTextTokenizer) Tokens(v interface{}) ([]string, error) {
 	if !ok || str == "" {
 		return []string{}, nil
 	}
-	lang := langBase(t.lang)
+	lang := LangBase(t.lang)
 	// pass 1 - lowercase and normalize input
 	tokens := fulltextAnalyzer.Analyze([]byte(str))
 	// pass 2 - filter stop words
@@ -326,6 +357,7 @@ func (t FullTextTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t FullTextTokenizer) Identifier() byte { return IdentFullText }
 func (t FullTextTokenizer) IsSortable() bool { return false }
 func (t FullTextTokenizer) IsLossy() bool    { return true }
+func (t FullTextTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // BoolTokenizer returns tokens from boolean data.
 type BoolTokenizer struct{}
@@ -342,6 +374,7 @@ func (t BoolTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t BoolTokenizer) Identifier() byte { return IdentBool }
 func (t BoolTokenizer) IsSortable() bool { return false }
 func (t BoolTokenizer) IsLossy() bool    { return false }
+func (t BoolTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // TrigramTokenizer returns trigram tokens from string data.
 type TrigramTokenizer struct{}
@@ -367,6 +400,7 @@ func (t TrigramTokenizer) Tokens(v interface{}) ([]string, error) {
 func (t TrigramTokenizer) Identifier() byte { return IdentTrigram }
 func (t TrigramTokenizer) IsSortable() bool { return false }
 func (t TrigramTokenizer) IsLossy() bool    { return true }
+func (t TrigramTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // HashTokenizer returns hash tokens from string data.
 type HashTokenizer struct{}
@@ -394,6 +428,7 @@ func (t HashTokenizer) IsSortable() bool { return false }
 // is very low probability of collisions with a 256-bit hash. We use that fact to speed up equality
 // query operations using the hash index.
 func (t HashTokenizer) IsLossy() bool { return false }
+func (t HashTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 // PluginTokenizer is implemented by external plugins loaded dynamically via
 // *.so files. It follows the implementation semantics of the Tokenizer
@@ -414,6 +449,7 @@ type CustomTokenizer struct{ PluginTokenizer }
 
 func (t CustomTokenizer) IsSortable() bool { return false }
 func (t CustomTokenizer) IsLossy() bool    { return true }
+func (t CustomTokenizer) Prefix() string { panic("Prefix() is not implemented.") }
 
 func encodeInt(val int64) string {
 	buf := make([]byte, 9)

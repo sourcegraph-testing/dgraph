@@ -30,6 +30,8 @@ func GetLangTokenizer(t Tokenizer, lang string) Tokenizer {
 		// We must return a new instance because another goroutine might be calling this
 		// with a different lang.
 		return FullTextTokenizer{lang: lang}
+	case ExactTokenizer:
+		return LangTokenizer{lang: lang}
 	}
 	return t
 }
