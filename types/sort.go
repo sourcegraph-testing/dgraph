@@ -38,8 +38,8 @@ func (s sortBase) Len() int { return len(s.values) }
 // Swap swaps two elements.
 func (s sortBase) Swap(i, j int) {
 	s.values[i], s.values[j] = s.values[j], s.values[i]
-	data := s.ul.Uids
-	data[i], data[j] = data[j], data[i]
+	// data := s.ul.Uids
+	// data[i], data[j] = data[j], data[i]
 	if s.o != nil {
 		s.o[i], s.o[j] = s.o[j], s.o[i]
 	}
