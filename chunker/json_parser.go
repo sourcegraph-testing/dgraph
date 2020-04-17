@@ -322,7 +322,7 @@ func (buf *NQuadBuffer) mapToNquads(m map[string]interface{}, op int, parentPred
 			}
 		}
 		if uid > 0 {
-			mr.uid = fmt.Sprintf("%d", uid)
+			mr.uid = strconv.Itoa(uid)
 		}
 	}
 
