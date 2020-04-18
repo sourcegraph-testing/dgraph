@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -149,7 +150,7 @@ func valToBytes(v types.Val) ([]byte, error) {
 	case types.BinaryID:
 		return []byte(fmt.Sprintf("%q", v.Value)), nil
 	case types.IntID:
-		return []byte(fmt.Sprintf("%d", v.Value)), nil
+		return []byte(strconv.Itoa(v.Value)), nil
 	case types.FloatID:
 		return []byte(fmt.Sprintf("%f", v.Value)), nil
 	case types.BoolID:
