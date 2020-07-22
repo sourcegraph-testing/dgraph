@@ -142,7 +142,7 @@ func (w *grpcWorker) ReceivePredicate(stream pb.Worker_ReceivePredicateServer) e
 	for {
 		kvBatch, err := stream.Recv()
 		if err == io.EOF {
-			payload.Data = []byte(fmt.Sprintf("%d", count))
+			payload.Data = []byte(strconv.Itoa(count))
 			stream.SendAndClose(payload)
 			break
 		}
