@@ -21,7 +21,7 @@ notice = """
 """
 
 def addCopyright(file):
-    print(("Add copyright to", file))
+    print("Add copyright to", file)
     f = open(file, "r+")
     lines = f.readlines()
     lines.insert(0, notice)
@@ -52,7 +52,7 @@ def update(file):
             break
 
     if end == 0:
-        print("ERROR: Couldn't find copyright:", file)
+        print "ERROR: Couldn't find copyright:", file
         return
 
     updated = lines[:start]
